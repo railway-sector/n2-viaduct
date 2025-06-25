@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, use } from "react";
-import { viaductLayer } from "../layers";
+import { stationLayer, viaductLayer } from "../layers";
 import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
@@ -52,7 +52,8 @@ const Chart = () => {
       setProgress(response);
     });
 
-    zoomToLayer(viaductLayer, arcgisScene);
+    stationLayer.definitionExpression = "CP = '" + contractpackages + "'";
+    zoomToLayer(stationLayer, arcgisScene);
   }, [contractpackages]);
 
   // type
