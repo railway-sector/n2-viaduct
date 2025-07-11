@@ -1,3 +1,10 @@
+.esri-attribution {
+  display: none;
+  /* or */
+  /* position: absolute;
+  left: -9999px; */
+}
+
 calcite-label {
   --calcite-color-text-1: #ffffff;
   --calcite-font-size--1: 1.1rem;
