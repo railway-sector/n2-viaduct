@@ -7,6 +7,7 @@ import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
 import "../App.css";
 import {
+  construction_status,
   generateChartData,
   generateTotalProgress,
   thousands_separators,
@@ -333,8 +334,8 @@ const Chart = () => {
       });
       legend.data.push(series);
     }
-    makeSeries("Complete", "comp");
-    makeSeries("Incomplete", "incomp");
+    makeSeries(construction_status[2], "comp");
+    makeSeries(construction_status[0], "incomp");
     // makeSeries('Delayed', 'delay');
     chart.appear(1000, 100);
 
