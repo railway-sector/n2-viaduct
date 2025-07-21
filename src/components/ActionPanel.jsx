@@ -59,7 +59,9 @@ function ActionPanel() {
         displayMode="dock"
         style={{
           borderStyle: "solid",
-          borderLeftWidth: 1,
+          borderRightWidth: 4,
+          borderLeftWidth: 4,
+          borderBottomWidth: 4.5,
         }}
       >
         <CalciteActionBar slot="action-bar">

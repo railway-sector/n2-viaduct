@@ -347,7 +347,18 @@ const Chart = () => {
   const valueLabelColor = "#d1d5db";
   return (
     <>
-      <CalciteTabs slot="panel-end" scale="m">
+      <CalciteTabs
+        slot="panel-end"
+        scale="m"
+        style={{
+          padding: "0 1rem",
+          borderStyle: "solid",
+          borderRightWidth: 4,
+          borderLeftWidth: 4,
+          borderBottomWidth: 4.5,
+          borderColor: "#555555",
+        }}
+      >
         <div
           id={chartID}
           style={{

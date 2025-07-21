@@ -17,9 +17,6 @@ calcite-tabs {
   --calcite-color-border-3: #555555;
   --calcite-color-border-2: #555555;
   --calcite-color-border-1: #555555;
-  border-style: solid;
-  border-width: 0.7;
-  border-top: rgb(0, 0, 0, 0);
 }
 
 calcite-action-bar {

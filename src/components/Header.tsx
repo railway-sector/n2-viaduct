@@ -21,10 +21,10 @@ function Header() {
           height: "70px",
           padding: "0 1rem",
           borderStyle: "solid",
-          borderTopWidth: "1px",
-          borderBottomWidth: "1px",
-          borderRightWidth: "1px",
-          borderLeftWidth: "1px",
+          borderTopWidth: "4px",
+          borderBottomWidth: "4px",
+          borderRightWidth: "4px",
+          borderLeftWidth: "4px",
         }}
       >
         <img
