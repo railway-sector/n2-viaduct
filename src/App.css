@@ -128,11 +128,11 @@ calcite-segmented-control {
 .date {
   color: #9ca3af;
   font-size: 0.9rem;
-  width: 150px;
+  width: 250px;
   height: 20px;
   margin-top: auto;
-  margin-left: auto;
-  float: left;
+  padding-left: 20%;
+  /* background-color: #008d52; */
 }
 
 .dropdownFilter {
