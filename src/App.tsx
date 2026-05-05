@@ -12,9 +12,9 @@ import MapDisplay from "./components/MapDisplay";
 import ActionPanel from "./components/ActionPanel";
 import Header from "./components/Header";
 import UndergroundSwitch from "./components/UndergroundSwitch";
-import { contractPackage } from "./Query";
 import Chart from "./components/Chart";
 import { MyContext } from "./contexts/MyContext";
+import { contractPackage } from "./uniqueValues";
 
 export function App(): React.JSX.Element {
   const [loggedInState, setLoggedInState] = useState<boolean>(false);
