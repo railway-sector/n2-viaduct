@@ -4,13 +4,7 @@ import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
-import {
-  chartDataStackColumns,
-  chartRenderer,
-  queryDefinitionExpression,
-  queryExpression,
-  zoomToLayer,
-} from "../Query";
+import { zoomToLayer } from "../Query";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import { MyContext } from "../contexts/MyContext";
 import {
@@ -20,6 +14,9 @@ import {
   viaductStatusColorForChart,
   viatypes,
 } from "../uniqueValues";
+import { queryDefinitionExpression, queryExpression } from "../QueryExpression";
+import { chartDataStackColumns } from "../ChartDataGenerator";
+import { chartRenderer } from "../ChartRenderer";
 
 // Dispose function
 function maybeDisposeRoot(divId: any) {
@@ -43,17 +40,18 @@ const Chart = () => {
   const chartID = "viaduct-bar";
 
   useEffect(() => {
+    const qe = queryExpression({
+      q1Value: contractpackages,
+      q1Field: cp_field,
+    });
+
     queryDefinitionExpression({
-      queryExpression: queryExpression({
-        q1Value: contractpackages,
-        q1Field: cp_field,
-      }),
+      queryExpression: qe,
       featureLayer: [viaductLayer, pierNoLayer],
     });
 
     chartDataStackColumns({
-      q1Value: contractpackages,
-      q1Field: cp_field,
+      qChart: qe,
       chartCategoryTypes: viatypes,
       chartCategoryField: type_field_layer,
       chartCategoryValueType: "number",
@@ -142,6 +140,7 @@ const Chart = () => {
       root: root,
       chart: chart,
       data: chartData,
+      layers: [viaductLayer],
       q1Value: contractpackages,
       q1Field: cp_field,
       chartCategoryTypes: viatypes,
@@ -149,6 +148,7 @@ const Chart = () => {
       chartCategoryFieldScene: type_field_layer,
       statusTypename: ["Completed", "To be Constructed"], //["Completed", "To be Constructed", "Under Construction"],
       statusStatename: ["comp", "incomp"], //["comp", "incomp", "ongoing"],
+      statusStateValue: [4, 1],
       statusField: status_field,
       seriesStatusColor: viaductStatusColorForChart,
       strokeColor: chartBorderLineColor,
