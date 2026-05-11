@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, use } from "react";
-import { pierNoLayer, viaductLayer } from "../layers";
+import { pierNoLayer, queryc, viaductLayer } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
@@ -14,7 +14,7 @@ import {
   viaductStatusColorForChart,
   viatypes,
 } from "../uniqueValues";
-import { queryDefinitionExpression, queryExpression } from "../QueryExpression";
+import { queryDefinitionExpression } from "../QueryExpression";
 import { chartDataStackColumns } from "../ChartDataGenerator";
 import { chartRenderer } from "../ChartRenderer";
 
@@ -40,18 +40,16 @@ const Chart = () => {
   const chartID = "viaduct-bar";
 
   useEffect(() => {
-    const qe = queryExpression({
-      q1Value: contractpackages,
-      q1Field: cp_field,
-    });
+    queryc.qValues = [contractpackages];
+    queryc.qFields = [cp_field];
 
     queryDefinitionExpression({
-      queryExpression: qe,
+      queryExpression: queryc.queryExpression(),
       featureLayer: [viaductLayer, pierNoLayer],
     });
 
     chartDataStackColumns({
-      qChart: qe,
+      qChart: queryc.queryExpression(),
       chartCategoryTypes: viatypes,
       chartCategoryField: type_field_layer,
       chartCategoryValueType: "number",
