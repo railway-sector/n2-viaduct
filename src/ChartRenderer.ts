@@ -73,7 +73,7 @@ interface clickSeriesType {
   q1Field: any;
   chartCategoryTypes: any;
   chartCategoryFieldScene: any;
-  statusStateValue: any;
+  statusStatename: any;
   statusField: any;
   arcgisScene: any;
 }
@@ -84,7 +84,7 @@ export function clickSeries({
   q1Field,
   chartCategoryTypes,
   chartCategoryFieldScene,
-  statusStateValue,
+  statusStatename,
   statusField,
   arcgisScene,
 }: clickSeriesType) {
@@ -101,7 +101,14 @@ export function clickSeries({
     queryc2.chartCategory = typeSelected;
     queryc2.chartCategoryField = chartCategoryFieldScene;
     queryc2.chartCategoryType = "number";
-    queryc2.status = statusStateValue;
+    queryc2.status =
+      statusStatename === "incomp"
+        ? 1
+        : statusStatename === "ongoing"
+          ? 2
+          : statusStatename === "delayed"
+            ? 3
+            : 4;
     queryc2.statusField = statusField;
 
     for (const layer of layers) {
@@ -148,7 +155,6 @@ export function makeSeries({
   data,
   statusTypename,
   statusStatename,
-  statusStateValue,
   statusField,
   xAxis,
   yAxis,
@@ -216,7 +222,7 @@ export function makeSeries({
     q1Field: q1Field,
     chartCategoryTypes: chartCategoryTypes,
     chartCategoryFieldScene: chartCategoryFieldScene,
-    statusStateValue: statusStateValue,
+    statusStatename: statusStatename,
     statusField: statusField,
     arcgisScene: arcgisScene,
   });
