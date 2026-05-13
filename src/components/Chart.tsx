@@ -10,6 +10,7 @@ import { MyContext } from "../contexts/MyContext";
 import {
   cp_field,
   status_field,
+  statusArray,
   type_field_layer,
   viaductStatusColorForChart,
   viatypes,
@@ -146,7 +147,7 @@ const Chart = () => {
       chartCategoryFieldScene: type_field_layer,
       statusTypename: ["Completed", "To be Constructed"], //["Completed", "To be Constructed", "Under Construction"],
       statusStatename: ["comp", "incomp"], //["comp", "incomp", "ongoing"],
-      statusStateValue: [4, 1],
+      statusArray: statusArray,
       statusField: status_field,
       seriesStatusColor: viaductStatusColorForChart,
       strokeColor: chartBorderLineColor,

@@ -12,11 +12,14 @@ export type StatusStateType = "comp" | "incomp" | "ongoing" | "delayed";
 export type LayerNameType = "utility" | "viaduct" | "others";
 export type TypeFieldType = "number" | "string";
 
-// export const construction_status = [
-//   "To be Constructed",
-//   "Under Construction",
-//   "Completed",
-// ];
+export const statusLabels = ["incomp", "ongoing", "delayed", "comp"];
+export const statusValues = [1, 2, 3, 4];
+export const statusArray = statusLabels.map((status: any, index: any) => {
+  return Object.assign({
+    status: status,
+    value: statusValues[index],
+  });
+});
 
 export const contractPackage = ["N-01", "N-02", "N-03", "N-04"];
 
