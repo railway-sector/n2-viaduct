@@ -1,10 +1,8 @@
-import { useEffect, useRef, useState, use } from "react";
+import { useEffect, useRef, use } from "react";
 import { pierNoLayer, queryc, viaductLayer } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
-import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
-import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
-import { zoomToLayer } from "../Query";
+import { zoomToLayer } from "../query";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import { MyContext } from "../contexts/MyContext";
 import {
@@ -15,18 +13,12 @@ import {
   viaductStatusColorForChart,
   viatypes,
 } from "../uniqueValues";
-import { queryDefinitionExpression } from "../QueryExpression";
-import { chartDataStackColumns } from "../ChartDataGenerator";
-import { chartRenderer } from "../ChartRenderer";
-
-// Dispose function
-function maybeDisposeRoot(divId: any) {
-  am5.array.each(am5.registry.rootElements, function (root) {
-    if (root.dom.id === divId) {
-      root.dispose();
-    }
-  });
-}
+import { queryDefinitionExpression } from "../queryExpression";
+import { chartDataStackColumns } from "../chartDataGenerator";
+import { chartRenderer } from "../chartRenderer";
+import { legendSetter, rootSetter } from "../chartSetter";
+import { useQuery } from "@tanstack/react-query";
+import type { ChartResponse } from "../interfaceKeys";
 
 // Draw chart
 const Chart = () => {
@@ -35,35 +27,40 @@ const Chart = () => {
   const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
   const legendRef = useRef<unknown | any | undefined>({});
   const chartRef = useRef<unknown | any | undefined>({});
-  const [chartData, setChartData] = useState([]);
-  const [progress, setProgress] = useState<number>(0);
-
   const chartID = "viaduct-bar";
 
-  useEffect(() => {
-    queryc.qValues = [contractpackages];
-    queryc.qFields = [cp_field];
+  const { data } = useQuery<ChartResponse | any>({
+    queryKey: [contractpackages, status_field, viaductLayer],
+    queryFn: async () => {
+      queryc.qValues = [contractpackages];
+      queryc.qFields = [cp_field];
 
-    queryDefinitionExpression({
-      queryExpression: queryc.queryExpression(),
-      featureLayer: [viaductLayer, pierNoLayer],
-    });
+      queryDefinitionExpression({
+        queryExpression: queryc.queryExpression(),
+        featureLayer: [viaductLayer, pierNoLayer],
+      });
 
-    chartDataStackColumns({
-      qChart: queryc.queryExpression(),
-      chartCategoryTypes: viatypes,
-      chartCategoryField: type_field_layer,
-      chartCategoryValueType: "number",
-      layers: [viaductLayer],
-      statusState: [1, 2, 3, 4],
-      statusField: status_field,
-    }).then((result: any) => {
-      setChartData(result[0]);
-      setProgress(result[2]);
-    });
+      const chartData = await chartDataStackColumns({
+        qChart: queryc.queryExpression(),
+        chartCategoryTypes: viatypes,
+        chartCategoryField: type_field_layer,
+        chartCategoryValueType: "number",
+        layers: [viaductLayer],
+        statusState: [1, 2, 3, 4],
+        statusField: status_field,
+      });
 
-    zoomToLayer(pierNoLayer, arcgisScene?.view);
-  }, [contractpackages]);
+      zoomToLayer(pierNoLayer, arcgisScene?.view);
+
+      return {
+        chartData: chartData[0] || [],
+        perc_comp: chartData[2] || 0,
+      };
+    },
+    staleTime: Infinity,
+  });
+  const chartData = data?.chartData || [];
+  const perc_comp = data?.perc_comp || 0;
 
   // Define parameters
   const marginTop = 0;
@@ -90,18 +87,7 @@ const Chart = () => {
 
   // Utility Chart
   useEffect(() => {
-    maybeDisposeRoot(chartID);
-
-    const root = am5.Root.new(chartID);
-    root.container.children.clear();
-    root._logo?.dispose();
-
-    // Set themesf
-    // https://www.amcharts.com/docs/v5/concepts/themes/
-    root.setThemes([
-      am5themes_Animated.new(root),
-      am5themes_Responsive.new(root),
-    ]);
+    const root = rootSetter({ chartID: chartID });
 
     const chart = root.container.children.push(
       am5xy.XYChart.new(root, {
@@ -122,17 +108,17 @@ const Chart = () => {
     );
     chartRef.current = chart;
 
-    const legend = chart.children.push(
-      am5.Legend.new(root, {
-        centerX: am5.p50,
-        centerY: am5.percent(50),
-        x: am5.percent(60),
-        y: am5.percent(97),
-        marginTop: 20,
-        scale: 1,
-        layout: root.horizontalLayout,
-      }),
-    );
+    const legend = legendSetter({
+      chart: chart,
+      root: root,
+      centerX: 50,
+      centerY: 50,
+      x: 60,
+      y: 97,
+      marginTop: 20,
+      layout: root.horizontalLayout,
+    });
+
     legendRef.current = legend;
 
     chartRenderer({
@@ -140,8 +126,7 @@ const Chart = () => {
       chart: chart,
       data: chartData,
       layers: [viaductLayer],
-      q1Value: contractpackages,
-      q1Field: cp_field,
+      qChart: queryc,
       chartCategoryTypes: viatypes,
       chartCategoryFieldRevit: type_field_layer,
       chartCategoryFieldScene: type_field_layer,
@@ -219,7 +204,7 @@ const Chart = () => {
                 margin: "auto",
               }}
             >
-              {progress} %
+              {perc_comp} %
             </dd>
           </dl>
         </div>
