@@ -1,7 +1,0 @@
-import{oH as u,qO as b,bO as d,Hi as m,Go as x,fb as y,lx as O}from"./index-CTghDlp_.js";import{e as j}from"./ShaderCompiler-G2XYGDs6.js";import{e as v}from"./ProgramTemplate-BheUb5HG.js";function c(r){const{options:e,value:n}=r;return typeof e[n]=="number"}function p(r){let e="";for(const n in r){const o=r[n];if(typeof o=="boolean")o&&(e+=`#define ${n}
-`);else if(typeof o=="number")e+=`#define ${n} ${o.toFixed()}
-`;else if(typeof o=="object")if(c(o)){const{value:t,options:f,namespace:i}=o,s=i?`${i}_`:"";for(const a in f)e+=`#define ${s}${a} ${f[a].toFixed()}
-`;e+=`#define ${n} ${s}${t}
-`}else{const t=o.options;let f=0;for(const i in t)e+=`#define ${t[i]} ${(f++).toFixed()}
-`;e+=`#define ${n} ${t[o.value]}
-`}}return e}export{u as BufferObject,b as FramebufferObject,d as Program,m as ProgramCache,x as Renderbuffer,j as ShaderCompiler,y as Texture,O as VertexArrayObject,v as createProgram,p as glslifyDefineMap};
