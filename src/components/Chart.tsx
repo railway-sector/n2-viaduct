@@ -43,8 +43,7 @@ const Chart = () => {
       const chartData = await chartDataStackColumns({
         qChart: queryc.queryExpression(),
         chartCategoryTypes: viatypes,
-        chartCategoryField: type_field_layer,
-        chartCategoryValueType: "number",
+        chartCategoryTypeField: type_field_layer,
         layers: [viaductLayer],
         statusState: [1, 2, 3, 4],
         statusField: status_field,
