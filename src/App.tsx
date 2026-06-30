@@ -26,14 +26,8 @@ export function App(): React.JSX.Element {
   const [contractpackages, setContractpackages] = useState<any>(
     contractPackage[0],
   );
-  const [chartPanelwidth, setChartPanelwidth] = useState<any>();
-
   const updateContractPackage = (newContractpackage: any) => {
     setContractpackages(newContractpackage);
-  };
-
-  const updateChartPanelwidth = (newWidth: any) => {
-    setChartPanelwidth(newWidth);
   };
 
   return (
@@ -43,14 +37,7 @@ export function App(): React.JSX.Element {
           <calcite-shell
             style={{ scrollbarWidth: "thin", scrollbarColor: "#888 #555" }}
           >
-            <MyContext
-              value={{
-                contractpackages,
-                chartPanelwidth,
-                updateContractPackage,
-                updateChartPanelwidth,
-              }}
-            >
+            <MyContext value={{ contractpackages, updateContractPackage }}>
               <QueryClientProvider client={queryClient}>
                 <ActionPanel />
                 <UndergroundSwitch />

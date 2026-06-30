@@ -1,5 +1,5 @@
-import { useEffect, useRef, use } from "react";
-import { pierNoLayer, queryc, viaductLayer } from "../layers";
+import { useEffect, useRef, use, useState } from "react";
+import { chartstack, pierNoLayer, queryc, viaductLayer } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import { zoomToLayer } from "../query";
@@ -14,16 +14,15 @@ import {
   viatypes,
 } from "../uniqueValues";
 import { queryDefinitionExpression } from "../queryExpression";
-import { chartDataStackColumns } from "../chartDataGenerator";
 import { chartRenderer } from "../chartRenderer";
-import { legendSetter, rootSetter } from "../chartSetter";
 import { useQuery } from "@tanstack/react-query";
 import type { ChartResponse } from "../interfaceKeys";
+import { legendSetter, rootSetter } from "../chartSetter";
 
 // Draw chart
 const Chart = () => {
-  const { contractpackages, updateChartPanelwidth, chartPanelwidth } =
-    use(MyContext);
+  const { contractpackages } = use(MyContext);
+  const [chartPanelwidth, setChartPanelwidth] = useState<any>();
   const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
   const legendRef = useRef<unknown | any | undefined>({});
   const chartRef = useRef<unknown | any | undefined>({});
@@ -40,14 +39,13 @@ const Chart = () => {
         featureLayer: [viaductLayer, pierNoLayer],
       });
 
-      const chartData = await chartDataStackColumns({
-        qChart: queryc.queryExpression(),
-        chartCategoryTypes: viatypes,
-        chartCategoryTypeField: type_field_layer,
-        layers: [viaductLayer],
-        statusState: [1, 2, 3, 4],
-        statusField: status_field,
-      });
+      chartstack.qChart = queryc.queryExpression();
+      chartstack.layers = [viaductLayer];
+      chartstack.categoryTypes = viatypes;
+      chartstack.categoryTypeField = type_field_layer;
+      chartstack.statusState = [1, 2, 3, 4];
+      chartstack.statusField = status_field;
+      const chartData = await chartstack.chartDataStackColumns();
 
       zoomToLayer(pierNoLayer, arcgisScene?.view);
 
@@ -142,7 +140,7 @@ const Chart = () => {
       chartIconPositionX: chartIconPositionX,
       chartPaddingRightIconLabel: chartPaddingRightIconLabel,
       legend: legend,
-      updateChartPanelwidth: updateChartPanelwidth,
+      updateChartPanelwidth: setChartPanelwidth,
     });
 
     chart.appear(1000, 100);
