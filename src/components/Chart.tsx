@@ -55,6 +55,9 @@ const Chart = () => {
       };
     },
     // staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
   const chartData = data?.chartData || [];
   const perc_comp = data?.perc_comp || 0;
