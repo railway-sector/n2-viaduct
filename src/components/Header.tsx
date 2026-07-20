@@ -2,19 +2,14 @@ import { dateUpdate } from "../query";
 import StationSegmentedList from "./ContractPackageSegmentedList";
 import { primaryLabelColor } from "../uniqueValues";
 import { useQuery } from "@tanstack/react-query";
-import type { DisplayDates } from "../interfaceKeys";
-import { dateDisplayKeys } from "../interfaceKeys";
 
 function Header() {
-  const { data } = useQuery<DisplayDates | any>({
-    queryKey: [dateDisplayKeys.selected],
-    queryFn: () => dateUpdate(),
-    select: (response) => {
-      return { asOfDate: response };
-    },
+  const { data } = useQuery<any>({
+    queryKey: ["As_Of_Date"],
+    queryFn: () => dateUpdate("Utility Relocation"),
     staleTime: Infinity,
   });
-  const asOfDate = data?.asOfDate || "";
+  const asofdate = data ?? "";
 
   return (
     <>
@@ -62,7 +57,7 @@ function Header() {
             marginLeft: "auto",
           }}
         >
-          {!asOfDate ? "" : "As of " + asOfDate}
+          {!asofdate ? "" : "As of " + asofdate}
         </div>
 
         {/* Segmented List component */}

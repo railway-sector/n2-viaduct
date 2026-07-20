@@ -19,10 +19,10 @@ function UndergroundSwitch() {
         style={{
           position: "fixed",
           zIndex: 10,
-          bottom: 5,
-          // left: 0,
+          bottom: 0,
           color: "white",
           backgroundColor: "#2b2b2b",
+          borderWidth: 0.7,
           paddingLeft: 5,
           paddingRight: 5,
           paddingTop: 4,

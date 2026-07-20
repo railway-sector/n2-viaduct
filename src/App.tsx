@@ -11,7 +11,7 @@ import Header from "./components/Header";
 import UndergroundSwitch from "./components/UndergroundSwitch";
 import Chart from "./components/Chart";
 import { MyContext } from "./contexts/MyContext";
-import { contractPackage } from "./uniqueValues";
+import { cpackages } from "./uniqueValues";
 import { authenticate } from "./autho";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -23,11 +23,9 @@ export function App(): React.JSX.Element {
     authenticate(setLoggedInState, "Ej53Md7hP2lQU98y");
   }, []);
 
-  const [contractpackages, setContractpackages] = useState<any>(
-    contractPackage[0],
-  );
-  const updateContractPackage = (newContractpackage: any) => {
-    setContractpackages(newContractpackage);
+  const [cpackage, setCpackage] = useState<any>(cpackages[0]);
+  const updateCpackage = (newcp: any) => {
+    setCpackage(newcp);
   };
 
   return (
@@ -37,7 +35,7 @@ export function App(): React.JSX.Element {
           <calcite-shell
             style={{ scrollbarWidth: "thin", scrollbarColor: "#888 #555" }}
           >
-            <MyContext value={{ contractpackages, updateContractPackage }}>
+            <MyContext value={{ cpackage, updateCpackage }}>
               <QueryClientProvider client={queryClient}>
                 <ActionPanel />
                 <UndergroundSwitch />

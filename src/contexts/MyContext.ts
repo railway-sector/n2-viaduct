@@ -1,13 +1,13 @@
 import { createContext } from "react";
 
 type MyDropdownContextType = {
-  contractpackages: any;
-  updateContractPackage: any;
+  cpackage: any;
+  updateCpackage: any;
 };
 
 const initialState = {
-  contractpackages: undefined,
-  updateContractPackage: undefined,
+  cpackage: undefined,
+  updateCpackage: undefined,
 };
 
 export const MyContext = createContext<MyDropdownContextType>({

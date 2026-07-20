@@ -1,129 +1,170 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { dateTable, viaductLayerStatus4 } from "./layers";
-import StatisticDefinition from "@arcgis/core/rest/support/StatisticDefinition";
+import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
+import { dateTable } from "./layers";
+import QueryExpressionLayers from "query-layers-expression";
 
-export const construction_status = [
-  "To be Constructed",
-  "Under Construction",
-  "Completed",
-];
-
-// Updat date
-export async function dateUpdate() {
-  const monthList = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  const query = dateTable.createQuery();
-  query.where = "project = 'N2'" + " AND " + "category = 'Viaduct'";
-
-  return dateTable.queryFeatures(query).then((response: any) => {
-    const stats = response.features;
-    const dates = stats.map((result: any) => {
-      const date = new Date(result.attributes.date);
-      const year = date.getFullYear();
-      const month = monthList[date.getMonth()];
-      const day = date.getDate();
-      const final = year < 1990 ? "" : `${month} ${day}, ${year}`;
-      return final;
-    });
-    return dates;
+//---------------------------------------------------------//
+//                 Add Layers to Map                      //
+//---------------------------------------------------------//
+export function addLayersToMap(map: any, layersList: any[]) {
+  layersList.forEach((layer: any) => {
+    map.add(layer);
   });
 }
 
-export async function timeSeriesChartData(contractp: any) {
-  const total_complete_pile = new StatisticDefinition({
-    onStatisticField: "CASE WHEN Type = 1 THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_complete_pile",
-    statisticType: "sum",
-  });
+//-----------------------------------------//
+//        Layer visibility                //
+//-----------------------------------------//
+interface layersRevitVisibilityType {
+  layers: [FeatureLayer, FeatureLayer?, FeatureLayer?, FeatureLayer?];
+}
 
-  const total_complete_pilecap = new StatisticDefinition({
-    onStatisticField: "CASE WHEN Type = 2 THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_complete_pilecap",
-    statisticType: "sum",
-  });
-
-  const total_complete_pier = new StatisticDefinition({
-    onStatisticField: "CASE WHEN Type = 3 THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_complete_pier",
-    statisticType: "sum",
-  });
-
-  const total_complete_pierhead = new StatisticDefinition({
-    onStatisticField: "CASE WHEN Type = 4 THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_complete_pierhead",
-    statisticType: "sum",
-  });
-
-  const total_complete_precast = new StatisticDefinition({
-    onStatisticField: "CASE WHEN Type = 5 THEN 1 ELSE 0 END",
-    outStatisticFieldName: "total_complete_precast",
-    statisticType: "sum",
-  });
-
-  const query = viaductLayerStatus4.createQuery();
-  if (!contractp) {
-    query.where = "end_date IS NOT NULL" + " AND " + "CP = 'N-01'";
-  } else {
-    query.where = "end_date IS NOT NULL" + " AND " + "CP = '" + contractp + "'";
+export const resetAllLayers = ({ layers }: layersRevitVisibilityType) => {
+  if (layers) {
+    layers.map((layer: any) => {
+      if (layer) {
+        layer.layer.definitionExpression = "1=1";
+        layer.layer.visible = true;
+      }
+    });
   }
+};
 
-  query.outStatistics = [
-    total_complete_pile,
-    total_complete_pilecap,
-    total_complete_pier,
-    total_complete_pierhead,
-    total_complete_precast,
-  ];
-  query.outFields = ["end_date", "CP"];
-  query.orderByFields = ["end_date"];
-  query.groupByFieldsForStatistics = ["end_date"];
+//---------------------------------------------------------//
+//                Get as-of-date                           //
+//---------------------------------------------------------//
+export function yearMonthDay(date: Date) {
+  return {
+    year: date?.getFullYear() ?? 0,
+    month: date?.getMonth() + 1,
+    day: date?.getDate(),
+  };
+}
 
-  return viaductLayerStatus4.queryFeatures(query).then((response: any) => {
-    const stats = response.features;
+export function toAsofdate(date: Date) {
+  //--- Return displayed date: (as of date)
+  const { year, day } = yearMonthDay(date);
+  const cmonth = date?.toLocaleString("en-US", { month: "long" });
+  return `${cmonth} ${day}, ${year}`;
+}
 
-    // collect all dates for each viaduct type
-    const data = stats.map((result: any) => {
-      const attributes = result.attributes;
-      const date = attributes.end_date;
+export async function dateUpdate(category: string) {
+  //--- Only executed during an initial render
+  const query = dateTable.createQuery();
+  query.where = `project = 'N2' AND category = '${category}'`;
 
-      const pileCount = attributes.total_complete_pile;
-      const pilecapCount = attributes.total_complete_pilecap;
-      const pierCount = attributes.total_complete_pier;
-      const pierheadCount = attributes.total_complete_pierhead;
-      const precastCount = attributes.total_complete_precast;
+  const { features } = await dateTable.queryFeatures(query);
+  return features.map(({ attributes }: any) => {
+    const asofdate = toAsofdate(new Date(attributes.date));
 
-      // compile in object
-      return Object.assign(
-        {},
-        {
-          date,
-          pile: pileCount,
-          pilecap: pilecapCount,
-          pier: pierCount,
-          piearhead: pierheadCount,
-          precast: precastCount,
-        },
-      );
-    });
-
-    return data;
+    return asofdate;
   });
 }
 
-// Thousand separators function
+//---------------------------------------------//
+//               Stack Columns                 //
+//---------------------------------------------//
+interface StackColumnChartDataType {
+  colchart: any;
+  qChart: any;
+  categoryTypes: any;
+  categoryTypeField: any;
+  layers: any;
+  statusField: any;
+  statusState: any;
+}
+
+export async function stackColumnChartData({
+  colchart,
+  qChart,
+  categoryTypes,
+  categoryTypeField,
+  layers,
+  statusField,
+  statusState,
+}: StackColumnChartDataType) {
+  Object.assign(colchart, {
+    qChart: qChart.queryExpression(),
+    categoryTypes,
+    categoryTypeField,
+    layers,
+    statusField,
+    statusState,
+  });
+
+  return await colchart.chartDataStackColumns();
+}
+
+type StatusTypeNamesType =
+  | "To be Constructed"
+  | "Under Construction"
+  | "delayed"
+  | "Completed"
+  | "Exceeded"
+  | "Normal";
+
+type StatusStateType =
+  | "comp"
+  | "incomp"
+  | "ongoing"
+  | "delayed"
+  | "exceeded"
+  | "normal";
+
+interface ChartStackColumnRender {
+  render: any;
+  revit: boolean;
+  layers: any;
+  root: any;
+  chart: any;
+  data: any;
+  buildingLayer?: any;
+  qChart: any;
+  chartCategoryTypes: any;
+  chartCategoryTypeField: any;
+  statusTypename: StatusTypeNamesType[];
+  statusStatename: StatusStateType[];
+  statusArray: any;
+  statusField: any;
+  seriesStatusColor: any;
+  strokeColor: any;
+  strokeWidth: any;
+  view: any;
+  setLayerViewFilter?: any;
+  new_chartIconSize: any;
+  new_axisFontSize: any;
+  chartIconPositionX?: any;
+  chartPaddingRightIconLabel: any;
+  legend: any;
+  updateChartPanelwidth: any;
+}
+
+export async function stackColumnChartRender({
+  render,
+  ...props
+}: ChartStackColumnRender) {
+  Object.assign(render, props);
+  return await render.chartRendererColumn();
+}
+
+//--- Returns query expression
+export const makeQuery = (
+  qValues: string[],
+  qFields: string[],
+  qExpression?: string,
+  q2Expression?: string,
+) => {
+  const q = new QueryExpressionLayers();
+  q.qValues = qValues;
+  q.qFields = qFields;
+  if (qExpression) q.qExpression = qExpression;
+  if (q2Expression) q.q2Expression = q2Expression;
+  return q;
+};
+
+//------------------------------------------------//
+//                Get as-of-date                  //
+//------------------------------------------------//
 export function thousands_separators(num: any) {
   if (num) {
     const num_parts = num.toString().split(".");
@@ -132,29 +173,9 @@ export function thousands_separators(num: any) {
   }
 }
 
-export function zoomToLayer(layer: any, view: any) {
-  return layer.queryExtent().then((response: any) => {
-    view
-      ?.goTo(response.extent, {
-        //response.extent
-        speedFactor: 2,
-      })
-      .catch((error: any) => {
-        if (error.name !== "AbortError") {
-          console.error(error);
-        }
-      });
+export async function zoomToLayer(layer: any, view: any) {
+  const response = await layer?.queryExtent();
+  view?.goTo(response.extent, { speedFactor: 2 }).catch((error: any) => {
+    if (error.name !== "AbortError") console.error(error);
   });
-}
-
-// Layer list
-export async function defineActions(event: any) {
-  const { item } = event;
-  if (item.layer.type !== "group") {
-    item.panel = {
-      content: "legend",
-      open: true,
-    };
-  }
-  item.title === "Chainage" ? (item.visible = false) : (item.visible = true);
 }

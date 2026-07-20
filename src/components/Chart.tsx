@@ -1,53 +1,62 @@
 import { useEffect, useRef, use, useState } from "react";
-import { chartstack, pierNoLayer, queryc, viaductLayer } from "../layers";
+import { pierAccessLayer, viaductLayer } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
-import { zoomToLayer } from "../query";
+import {
+  makeQuery,
+  stackColumnChartData,
+  stackColumnChartRender,
+  zoomToLayer,
+} from "../query";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import { MyContext } from "../contexts/MyContext";
 import {
-  cp_field,
-  status_field,
-  statusArray,
-  type_field_layer,
-  viaductStatusColorForChart,
-  viatypes,
+  cp_f,
+  via_status_f,
+  via_type_f,
+  viastatus_q,
+  viatypes_q,
 } from "../uniqueValues";
 import { queryDefinitionExpression } from "../queryExpression";
-import { chartRenderer } from "../chartRenderer";
 import { useQuery } from "@tanstack/react-query";
 import type { ChartResponse } from "../interfaceKeys";
 import { legendSetter, rootSetter } from "../chartSetter";
+import ChartStackColumns from "chart-stack-column";
+import ChartStackColumnRender from "chart-stack-column-render";
 
 // Draw chart
 const Chart = () => {
-  const { contractpackages } = use(MyContext);
+  const { cpackage } = use(MyContext);
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
   const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
+
   const legendRef = useRef<unknown | any | undefined>({});
   const chartRef = useRef<unknown | any | undefined>({});
   const chartID = "viaduct-bar";
 
-  const { data } = useQuery<ChartResponse | any>({
-    queryKey: [contractpackages, status_field, viaductLayer],
-    queryFn: async () => {
-      queryc.qValues = [contractpackages];
-      queryc.qFields = [cp_field];
+  //--- Query Expression
+  const queryc = makeQuery([cpackage], [cp_f]);
 
+  const { data } = useQuery<ChartResponse | any>({
+    queryKey: [cpackage, via_status_f, viaductLayer],
+    queryFn: async () => {
       queryDefinitionExpression({
         queryExpression: queryc.queryExpression(),
-        featureLayer: [viaductLayer, pierNoLayer],
+        featureLayer: [viaductLayer, pierAccessLayer],
       });
 
-      chartstack.qChart = queryc.queryExpression();
-      chartstack.layers = [viaductLayer];
-      chartstack.categoryTypes = viatypes;
-      chartstack.categoryTypeField = type_field_layer;
-      chartstack.statusState = [1, 2, 3, 4];
-      chartstack.statusField = status_field;
-      const chartData = await chartstack.chartDataStackColumns();
+      //--- chart data
+      const chartData = await stackColumnChartData({
+        colchart: new ChartStackColumns(),
+        qChart: queryc,
+        categoryTypes: viatypes_q,
+        categoryTypeField: via_type_f,
+        layers: [viaductLayer],
+        statusField: via_status_f,
+        statusState: [1, 2, 3, 4],
+      });
 
-      zoomToLayer(pierNoLayer, arcgisScene?.view);
+      zoomToLayer(pierAccessLayer, arcgisScene?.view);
 
       return {
         chartData: chartData[0] || [],
@@ -121,28 +130,31 @@ const Chart = () => {
 
     legendRef.current = legend;
 
-    chartRenderer({
-      root: root,
-      chart: chart,
-      data: chartData,
+    stackColumnChartRender({
+      render: new ChartStackColumnRender(),
+      revit: false,
       layers: [viaductLayer],
+      root,
+      chart,
+      data: chartData,
+      buildingLayer: undefined,
       qChart: queryc,
-      chartCategoryTypes: viatypes,
-      chartCategoryFieldRevit: type_field_layer,
-      chartCategoryFieldScene: type_field_layer,
-      statusTypename: ["Completed", "To be Constructed"], //["Completed", "To be Constructed", "Under Construction"],
-      statusStatename: ["comp", "incomp"], //["comp", "incomp", "ongoing"],
-      statusArray: statusArray,
-      statusField: status_field,
-      seriesStatusColor: viaductStatusColorForChart,
+      chartCategoryTypes: viatypes_q,
+      chartCategoryTypeField: via_type_f,
+      statusTypename: ["Completed", "To be Constructed"],
+      statusStatename: ["comp", "incomp"],
+      statusArray: viastatus_q,
+      statusField: via_status_f,
+      seriesStatusColor: viastatus_q.map((c: any) => c.color),
       strokeColor: chartBorderLineColor,
       strokeWidth: chartBorderLineWidth,
-      arcgisScene: arcgisScene,
-      new_chartIconSize: new_chartIconSize,
-      new_axisFontSize: new_axisFontSize,
-      chartIconPositionX: chartIconPositionX,
-      chartPaddingRightIconLabel: chartPaddingRightIconLabel,
-      legend: legend,
+      view: arcgisScene?.view,
+      setLayerViewFilter: undefined,
+      new_chartIconSize,
+      new_axisFontSize,
+      chartIconPositionX,
+      chartPaddingRightIconLabel,
+      legend,
       updateChartPanelwidth: setChartPanelwidth,
     });
 
@@ -163,7 +175,6 @@ const Chart = () => {
           borderRightWidth: 5,
           borderLeftWidth: 5,
           borderBottomWidth: 5,
-          // borderTopWidth: 5,
           borderColor: "#555555",
         }}
       >
