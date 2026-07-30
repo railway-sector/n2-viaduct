@@ -1,0 +1,1 @@
+import{c7 as m}from"./index-DY-LOXTR.js";import{a as n}from"./queryTopFeatures-DRqqEde0.js";import c from"./TopFeaturesQuery-D6-8xESy.js";async function i(o,t,r){const a=m(o);return(await n(a,c.from(t),{...r})).data.count}export{i as executeForTopCount};
