@@ -1,6 +1,5 @@
 import MeshSymbol3D from "@arcgis/core/symbols/MeshSymbol3D.js";
 import FillSymbol3DLayer from "@arcgis/core/symbols/FillSymbol3DLayer.js";
-import { toAsofdate } from "./query";
 import LabelClass from "@arcgis/core/layers/support/LabelClass";
 import UniqueValueRenderer from "@arcgis/core/renderers/UniqueValueRenderer";
 import SimpleRenderer from "@arcgis/core/renderers/SimpleRenderer";
@@ -11,6 +10,7 @@ import PopupTemplate from "@arcgis/core/PopupTemplate";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 import TextSymbol3DLayer from "@arcgis/core/symbols/TextSymbol3DLayer";
 import LabelSymbol3D from "@arcgis/core/symbols/LabelSymbol3D";
+// import { toAsofdate } from './query';
 
 //----------------------------------------------//
 //              portalItem                      //
@@ -202,20 +202,25 @@ export const via_renderer = new UniqueValueRenderer({
 
 //--- POPUP
 const highlight = (value: unknown) =>
-  `<span style="color: #d9dc00ff; font-weight: bold">${value}</span>`;
+  `<span style="color: #d9dc00ff; font-weight: bold; margin-left: 20px">${value}</span>`;
 
-const via_customContentLot = new CustomContent({
-  outFields: ["*"],
+const via_customContent = new CustomContent({
+  outFields: ["via_status_f", "Type", "PileNo", "PierId", "uniqueID", "Status"],
   creator: (event: any) => {
     const attrs = event.graphic.attributes;
     const cps = attrs[cp_f];
     const status = attrs[via_status_f];
-    const type = attrs["Types"] ?? attrs["Type"];
+    const type = attrs["Type"];
+    const pileno = attrs["PileNo"]
+    const pierid = attrs["PierId"]
+    const uniqueid = attrs["uniqueID"]
 
     //-- Dates
-    const start_date = toAsofdate(new Date(attrs["start_actual"]));
-    const planned_date = toAsofdate(new Date(attrs["finish_plan"]));
-    const end_date = toAsofdate(new Date(attrs["finish_actual"]));
+    // const start_date = toAsofdate(new Date(attrs["start_actual"]));
+    // const end_date = toAsofdate(new Date(attrs["finish_actual"]));
+    // <tr><td class='lbl'>Start Date:</td><td>${highlight(start_date ?? "")}</td></tr>
+    // <tr><td class='lbl'>End Date:</td><td>${highlight(end_date ?? "")}</td></tr>
+
     const typeV = viatypes_q.find((f: any) => f.value === type)?.category;
     const statusL = viastatus_q.filter((f: any) => f.value === status)[0]
       ?.label;
@@ -227,11 +232,11 @@ const via_customContentLot = new CustomContent({
       </style>
     <table style='border-collapse: collapse;'>
         <tr><td class='lbl'>Contract Package:</td><td>${highlight(cps)}</td></tr>
-        <tr><td class='lbl'>Types:</td><td>${highlight(typeV)}</td></tr>
+        <tr><td class='lbl'>Type:</td><td>${highlight(typeV)}</td></tr>
         <tr><td class='lbl'>Status:</td><td>${highlight(statusL ?? "")}</td></tr>
-        <tr><td class='lbl'>Start Date:</td><td>${highlight(start_date ?? "")}</td></tr>
-        <tr><td class='lbl'>Planned Date:</td><td>${highlight(planned_date ?? "")}</td></tr>
-        <tr><td class='lbl'>End Date:</td><td>${highlight(end_date ?? "")}</td></tr>
+        <tr><td class='lbl'>Pile No:</td><td>${highlight(pileno ?? "")}</td></tr>
+        <tr><td class='lbl'>Pier ID:</td><td>${highlight(pierid ?? "")}</td></tr>
+        <tr><td class='lbl'>Unique ID:</td><td>${highlight(uniqueid ?? "")}</td></tr>
       </table>
     </div>
               `;
@@ -241,7 +246,7 @@ const via_customContentLot = new CustomContent({
 export const via_popup = new PopupTemplate({
   title: "<div style='color: #eaeaea'>Pier Number: <b>{PierNumber}</b></div>",
   lastEditInfoEnabled: false,
-  content: [via_customContentLot],
+  content: [via_customContent],
 });
 
 //---------------------------------------------//
