@@ -1,1 +1,0 @@
-import{c7 as s,J as i}from"./index-DY-LOXTR.js";import{m as c}from"./queryTopFeatures-DRqqEde0.js";import n from"./TopFeaturesQuery-D6-8xESy.js";async function x(r,o,t,m){const a=s(r),e={...m},{data:f}=await c(a,n.from(o),t,e);return i.fromJSON(f)}export{x as executeTopFeaturesQuery};
