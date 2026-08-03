@@ -10,6 +10,7 @@ import PopupTemplate from "@arcgis/core/PopupTemplate";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 import TextSymbol3DLayer from "@arcgis/core/symbols/TextSymbol3DLayer";
 import LabelSymbol3D from "@arcgis/core/symbols/LabelSymbol3D";
+import { toAsofdate } from './query';
 // import { toAsofdate } from './query';
 
 //----------------------------------------------//
@@ -205,7 +206,7 @@ const highlight = (value: unknown) =>
   `<span style="color: #d9dc00ff; font-weight: bold; margin-left: 20px">${value}</span>`;
 
 const via_customContent = new CustomContent({
-  outFields: ["via_status_f", "Type", "PileNo", "PierId", "uniqueID", "Status"],
+  outFields: ["via_status_f", "Type", "PileNo", "PierId", "uniqueID", "Status", "start_actual", "finish_actual"],
   creator: (event: any) => {
     const attrs = event.graphic.attributes;
     const cps = attrs[cp_f];
@@ -216,10 +217,11 @@ const via_customContent = new CustomContent({
     const uniqueid = attrs["uniqueID"]
 
     //-- Dates
-    // const start_date = toAsofdate(new Date(attrs["start_actual"]));
-    // const end_date = toAsofdate(new Date(attrs["finish_actual"]));
-    // <tr><td class='lbl'>Start Date:</td><td>${highlight(start_date ?? "")}</td></tr>
-    // <tr><td class='lbl'>End Date:</td><td>${highlight(end_date ?? "")}</td></tr>
+    const startActualDate = new Date(attrs["start_actual"]);
+    const start_date = startActualDate.getFullYear() > 1970 ? toAsofdate(startActualDate) : "";
+
+    const endActualDate = new Date(attrs["finish_actual"]);
+    const end_date = endActualDate.getFullYear() > 1970 ? toAsofdate(endActualDate) : "";
 
     const typeV = viatypes_q.find((f: any) => f.value === type)?.category;
     const statusL = viastatus_q.filter((f: any) => f.value === status)[0]
@@ -236,6 +238,8 @@ const via_customContent = new CustomContent({
         <tr><td class='lbl'>Status:</td><td>${highlight(statusL ?? "")}</td></tr>
         <tr><td class='lbl'>Pile No:</td><td>${highlight(pileno ?? "")}</td></tr>
         <tr><td class='lbl'>Pier ID:</td><td>${highlight(pierid ?? "")}</td></tr>
+        <tr><td class='lbl'>Start Date:</td><td>${highlight(start_date ?? "")}</td></tr>
+        <tr><td class='lbl'>End Date:</td><td>${highlight(end_date ?? "")}</td></tr>
         <tr><td class='lbl'>Unique ID:</td><td>${highlight(uniqueid ?? "")}</td></tr>
       </table>
     </div>
