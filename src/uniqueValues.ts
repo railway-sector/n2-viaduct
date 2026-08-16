@@ -10,7 +10,7 @@ import PopupTemplate from "@arcgis/core/PopupTemplate";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 import TextSymbol3DLayer from "@arcgis/core/symbols/TextSymbol3DLayer";
 import LabelSymbol3D from "@arcgis/core/symbols/LabelSymbol3D";
-import { toAsofdate } from './query';
+import { toAsofdate } from "./query";
 // import { toAsofdate } from './query';
 
 //----------------------------------------------//
@@ -125,25 +125,12 @@ export const via_status_f = "Status";
 export const cp_f = "CP";
 
 //--- VIADUCT TYPES
-const via_icons = [
-  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Pile_Logo.svg",
-  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Pilecap_Logo.svg",
-  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Pier_Logo.svg",
-  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Pierhead_Logo.svg",
-  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Precast_Logo.svg",
-  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Precast_Logo.svg",
-  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Precast_Logo.svg",
-  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Precast_Logo.svg",
-  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Precast_Logo.svg",
-  "https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_Precast_Logo.svg",
-];
-
 export const viatypes_q = [
-  { value: 1, category: "Bored Pile", icon: via_icons[0] },
-  { value: 2, category: "Pile Cap", icon: via_icons[1] },
-  { value: 3, category: "Pier", icon: via_icons[2] },
-  { value: 4, category: "Pier Head", icon: via_icons[3] },
-  { value: 5, category: "Precast", icon: via_icons[4] },
+  { value: 1, category: "Bored Pile" },
+  { value: 2, category: "Pile Cap" },
+  { value: 3, category: "Pier" },
+  { value: 4, category: "Pier Head" },
+  { value: 5, category: "Precast" },
 ];
 
 //--- VIADUCT STATUS
@@ -206,22 +193,33 @@ const highlight = (value: unknown) =>
   `<span style="color: #d9dc00ff; font-weight: bold; margin-left: 20px">${value}</span>`;
 
 const via_customContent = new CustomContent({
-  outFields: ["via_status_f", "Type", "PileNo", "PierId", "uniqueID", "Status", "start_actual", "finish_actual"],
+  outFields: [
+    "via_status_f",
+    "Type",
+    "PileNo",
+    "PierId",
+    "uniqueID",
+    "Status",
+    "start_actual",
+    "finish_actual",
+  ],
   creator: (event: any) => {
     const attrs = event.graphic.attributes;
     const cps = attrs[cp_f];
     const status = attrs[via_status_f];
     const type = attrs["Type"];
-    const pileno = attrs["PileNo"]
-    const pierid = attrs["PierId"]
-    const uniqueid = attrs["uniqueID"]
+    const pileno = attrs["PileNo"];
+    const pierid = attrs["PierId"];
+    const uniqueid = attrs["uniqueID"];
 
     //-- Dates
     const startActualDate = new Date(attrs["start_actual"]);
-    const start_date = startActualDate.getFullYear() > 1970 ? toAsofdate(startActualDate) : "";
+    const start_date =
+      startActualDate.getFullYear() > 1970 ? toAsofdate(startActualDate) : "";
 
     const endActualDate = new Date(attrs["finish_actual"]);
-    const end_date = endActualDate.getFullYear() > 1970 ? toAsofdate(endActualDate) : "";
+    const end_date =
+      endActualDate.getFullYear() > 1970 ? toAsofdate(endActualDate) : "";
 
     const typeV = viatypes_q.find((f: any) => f.value === type)?.category;
     const statusL = viastatus_q.filter((f: any) => f.value === status)[0]

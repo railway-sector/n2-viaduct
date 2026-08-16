@@ -2,12 +2,7 @@ import { useEffect, useRef, use, useState } from "react";
 import { pierAccessLayer, viaductLayer } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
-import {
-  makeQuery,
-  stackColumnChartData,
-  stackColumnChartRender,
-  zoomToLayer,
-} from "../query";
+import { zoomToLayer } from "../query";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import { MyContext } from "../contexts/MyContext";
 import {
@@ -23,6 +18,38 @@ import type { ChartResponse } from "../interfaceKeys";
 import { legendSetter, rootSetter } from "../chartSetter";
 import ChartStackColumns from "chart-stack-column";
 import ChartStackColumnRender from "chart-stack-column-render";
+import QueryExpressionLayers from "query-layers-expression";
+
+//-----------------------//
+//     usetViaductData   //
+//-----------------------//
+function useViaductData(cpackage: string, query: any) {
+  return useQuery<ChartResponse | any>({
+    queryKey: [cpackage, via_status_f, viaductLayer],
+    queryFn: async () => {
+      queryDefinitionExpression({
+        queryExpression: query.queryExpression(),
+        featureLayer: [viaductLayer, pierAccessLayer],
+      });
+
+      //--- chart data
+      const chartData = await new ChartStackColumns({
+        where: query,
+        categoryTypes: viatypes_q,
+        categoryTypeField: via_type_f,
+        layers: [viaductLayer],
+        statusField: via_status_f,
+        statusState: [1, 2, 3, 4],
+      }).chartDataStackColumns();
+
+      return {
+        chartData: chartData[0] || [],
+        perc_comp: chartData[2] || 0,
+      };
+    },
+    staleTime: Infinity,
+  });
+}
 
 // Draw chart
 const Chart = () => {
@@ -35,39 +62,12 @@ const Chart = () => {
   const chartID = "viaduct-bar";
 
   //--- Query Expression
-  const queryc = makeQuery([cpackage], [cp_f]);
-
-  const { data } = useQuery<ChartResponse | any>({
-    queryKey: [cpackage, via_status_f, viaductLayer],
-    queryFn: async () => {
-      queryDefinitionExpression({
-        queryExpression: queryc.queryExpression(),
-        featureLayer: [viaductLayer, pierAccessLayer],
-      });
-
-      //--- chart data
-      const chartData = await stackColumnChartData({
-        colchart: new ChartStackColumns(),
-        qChart: queryc,
-        categoryTypes: viatypes_q,
-        categoryTypeField: via_type_f,
-        layers: [viaductLayer],
-        statusField: via_status_f,
-        statusState: [1, 2, 3, 4],
-      });
-
-      zoomToLayer(pierAccessLayer, arcgisScene?.view);
-
-      return {
-        chartData: chartData[0] || [],
-        perc_comp: chartData[2] || 0,
-      };
-    },
-    // staleTime: Infinity,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+  const q1 = new QueryExpressionLayers({
+    qFields: [cp_f],
+    qValues: [cpackage],
   });
+
+  const { data } = useViaductData(cpackage, q1);
   const chartData = data?.chartData || [];
   const perc_comp = data?.perc_comp || 0;
 
@@ -80,8 +80,8 @@ const Chart = () => {
   const paddingLeft = 5;
   const paddingRight = 5;
   const paddingBottom = 0;
-  const chartIconPositionX = -21;
-  const chartPaddingRightIconLabel = 45;
+  const chartIconPositionX = undefined;
+  const chartPaddingRightIconLabel = 15;
   const chartBorderLineColor = "#00c5ff";
   const chartBorderLineWidth = 0.4;
 
@@ -94,9 +94,17 @@ const Chart = () => {
   const new_axisFontSize = chartPanelwidth * 0.036;
   const new_imageSize = chartPanelwidth * 0.035;
 
-  // Utility Chart
+  const zoomFiltersRef = useRef(`${cpackage}`);
+
   useEffect(() => {
+    const currentZoomFilters = `${cpackage}`;
+
+    if (currentZoomFilters !== zoomFiltersRef.current) {
+      zoomFiltersRef.current = currentZoomFilters;
+      zoomToLayer(pierAccessLayer, arcgisScene?.view);
+    }
     const root = rootSetter({ chartID: chartID });
+    root.setThemes([]);
 
     const chart = root.container.children.push(
       am5xy.XYChart.new(root, {
@@ -130,15 +138,15 @@ const Chart = () => {
 
     legendRef.current = legend;
 
-    stackColumnChartRender({
-      render: new ChartStackColumnRender(),
+    //--- Chart Renderer
+    new ChartStackColumnRender({
       revit: false,
       layers: [viaductLayer],
       root,
       chart,
       data: chartData,
       buildingLayer: undefined,
-      qChart: queryc,
+      where: q1,
       chartCategoryTypes: viatypes_q,
       chartCategoryTypeField: via_type_f,
       statusTypename: ["Completed", "To be Constructed"],
@@ -156,9 +164,7 @@ const Chart = () => {
       chartPaddingRightIconLabel,
       legend,
       updateChartPanelwidth: setChartPanelwidth,
-    });
-
-    chart.appear(1000, 100);
+    }).chartRendererColumn();
 
     return () => {
       root.dispose();
