@@ -13,7 +13,7 @@ import {
   viatypes_q,
 } from "../uniqueValues";
 import { queryDefinitionExpression } from "../queryExpression";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ChartResponse } from "../interfaceKeys";
 import { legendSetter, rootSetter } from "../chartSetter";
 import ChartStackColumns from "chart-stack-column";
@@ -47,6 +47,7 @@ function useViaductData(cpackage: string, query: any) {
         perc_comp: chartData[2] || 0,
       };
     },
+    placeholderData: keepPreviousData,
     staleTime: Infinity,
   });
 }
@@ -59,6 +60,7 @@ const Chart = () => {
 
   const legendRef = useRef<unknown | any | undefined>({});
   const chartRef = useRef<unknown | any | undefined>({});
+  const rendererRef = useRef<ChartStackColumnRender | null>(null);
   const chartID = "viaduct-bar";
 
   //--- Query Expression
@@ -88,14 +90,13 @@ const Chart = () => {
   // ************************************
   //  Responsive Chart parameters
   // ***********************************
-  const new_fontSize = chartPanelwidth / 20;
-  const new_valueSize = new_fontSize * 1.55;
-  const new_chartIconSize = chartPanelwidth * 0.07;
-  const new_axisFontSize = chartPanelwidth * 0.036;
-  const new_imageSize = chartPanelwidth * 0.035;
+  const fontSize = chartPanelwidth / 20;
+  const valueSize = fontSize * 1.55;
+  const chartIconSize = chartPanelwidth * 0.07;
+  const axisFontSize = chartPanelwidth * 0.036;
+  const imageSize = chartPanelwidth * 0.035;
 
   const zoomFiltersRef = useRef(`${cpackage}`);
-
   useEffect(() => {
     const currentZoomFilters = `${cpackage}`;
 
@@ -103,6 +104,29 @@ const Chart = () => {
       zoomFiltersRef.current = currentZoomFilters;
       zoomToLayer(pierAccessLayer, arcgisScene?.view);
     }
+  }, [chartData]);
+
+  //--- Keep click-handler-relevant values fresh without rebuilding the
+  //    chart. view lives here too (not passed statically to the
+  //    renderer) since arcgis-scene's view may not be ready on first
+  //    mount.
+  const configBaseArgs = {
+    revit: false,
+    layers: [viaductLayer],
+    buildingLayer: undefined,
+    chartCategoryTypeField: via_type_f,
+    where: q1,
+    status_field: via_status_f,
+    view: arcgisScene?.view,
+  };
+
+  const configRef = useRef({ ...configBaseArgs });
+  useEffect(() => {
+    configRef.current = { ...configBaseArgs };
+  }, [data, via_status_f, arcgisScene]);
+
+  //---  Column Chart Renderer — created ONCE (mount only)
+  useEffect(() => {
     const root = rootSetter({ chartID: chartID });
     root.setThemes([]);
 
@@ -135,40 +159,58 @@ const Chart = () => {
       marginTop: 20,
       layout: root.horizontalLayout,
     });
-
     legendRef.current = legend;
 
-    //--- Chart Renderer
-    new ChartStackColumnRender({
-      revit: false,
-      layers: [viaductLayer],
+    //--- NOTE: no `view` here — it's read live from configRef.current
+    //    inside chartrender.ts, since arcgis-scene may not have a
+    //    ready `.view` yet at this point.
+    const renderer = new ChartStackColumnRender({
       root,
       chart,
-      data: chartData,
-      buildingLayer: undefined,
-      where: q1,
+      data: [],
+      configRef,
       chartCategoryTypes: viatypes_q,
-      chartCategoryTypeField: via_type_f,
       statusTypename: ["Completed", "To be Constructed"],
       statusStatename: ["comp", "incomp"],
       statusArray: viastatus_q,
-      statusField: via_status_f,
       seriesStatusColor: viastatus_q.map((c: any) => c.color),
       strokeColor: chartBorderLineColor,
       strokeWidth: chartBorderLineWidth,
-      view: arcgisScene?.view,
-      new_chartIconSize,
-      new_axisFontSize,
+      chartIconSize,
+      axisFontSize,
       chartIconPositionX,
       chartPaddingRightIconLabel,
       legend,
       updateChartPanelwidth: setChartPanelwidth,
-    }).chartRendererColumn();
+    });
+    rendererRef.current = renderer;
+    renderer.chartRendererColumn();
 
     return () => {
       root.dispose();
+      rendererRef.current = null;
     };
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  //--- Push new data / inner value / affected-area figures into the
+  //    already-mounted chart. No dispose, no rebuild -> no blink.
+  //    NOTE: affectedAreaValue is NOT called here directly — it's
+  //    registered once inside chartrender.ts and reads live data via
+  //    closures, which updateData() keeps in sync. Calling it here on
+  //    every render would both miss the first paint and stack
+  //    duplicate adapters.
+  useEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer || !chartPanelwidth) return; // wait for a real width
+
+    //--- Sizes are captured at construction, so refresh them here
+    renderer.chartIconSize = chartIconSize;
+    renderer.axisFontSize = axisFontSize;
+
+    renderer.updateData(chartData);
+  }, [chartData, chartPanelwidth]);
+
   const primaryLabelColor = "#9ca3af";
   const valueLabelColor = "#d1d5db";
   return (
@@ -196,15 +238,15 @@ const Chart = () => {
           <img
             src="https://EijiGorilla.github.io/Symbols/Viaduct_Images/Viaduct_All_Logo.svg"
             alt="Land Logo"
-            height={`${new_imageSize}%`}
-            width={`${new_imageSize}%`}
+            height={`${imageSize}%`}
+            width={`${imageSize}%`}
             style={{ paddingTop: "20px", paddingLeft: "15px" }}
           />
           <dl style={{ alignItems: "center" }}>
             <dt
               style={{
                 color: primaryLabelColor,
-                fontSize: `${new_fontSize}px`,
+                fontSize: `${fontSize}px`,
                 marginRight: "35px",
               }}
             >
@@ -213,7 +255,7 @@ const Chart = () => {
             <dd
               style={{
                 color: valueLabelColor,
-                fontSize: `${new_valueSize}px`,
+                fontSize: `${valueSize}px`,
                 fontWeight: "bold",
                 fontFamily: "calibri",
                 lineHeight: "1.2",
